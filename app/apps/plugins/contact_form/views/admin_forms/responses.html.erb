@@ -1,5 +1,5 @@
 <div class="page-title">
-  <h2><span class="fa fa-archive"></span> <%= "#{t('plugin.contact_form.title_plugin')} / #{@form.name.capitalize}" %>
+  <h2><span class="fa fa-archive"></span> <%= "#{I18n.t('plugin.contact_form.title_plugin')} / #{@form.name.capitalize}" %>
   </h2>
 </div>
 <div class="page-content-wrap">
@@ -11,7 +11,7 @@
       <!-- START BASIC TABLE SAMPLE -->
       <div class="panel panel-default">
         <div class="panel-heading ui-draggable-handle">
-          <h3 class="panel-title"><%= t('plugin.contact_form.list_responses') %></h3>
+          <h3 class="panel-title"><%= I18n.t('plugin.contact_form.list_responses') %></h3>
         </div>
         <div class="panel-body">
 
@@ -21,7 +21,7 @@
               <% @op_fields.each do |f| %>
                 <th><%= f[:label] %></th>
               <% end %>
-              <th><%= t('plugin.contact_form.created_at') %></th>
+              <th><%= I18n.t('plugin.contact_form.created_at') %></th>
             </tr>
             </thead>
             <tbody>
@@ -49,13 +49,13 @@
 
             </tbody>
           </table>
-          <%= content_tag("div", raw("#{t('admin.message.data_found_list')}"), class: "alert alert-warning") if @forms.empty? %>
+          <%= content_tag("div", raw("#{I18n.t('admin.message.data_found_list')}"), class: "alert alert-warning") if @forms.empty? %>
           <%= will_paginate @forms, renderer: BootstrapPagination::Rails %>
         </div>
       </div>
 
       <div class="panel-footer">
-        <a class="btn btn-default" href="<%= url_for action: :index %>"><%= t('admin.button.back') %></a>
+        <a class="btn btn-default" href="<%= url_for action: :index %>"><%= I18n.t('admin.button.back') %></a>
       </div>
       <!-- END BASIC TABLE SAMPLE -->
     </div>
