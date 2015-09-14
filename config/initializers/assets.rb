@@ -18,10 +18,10 @@ Rails.application.config.assets.version = '1.0'
 # application.js, application.css, and all non-JS/CSS in app/assets folder are already added.
 # Rails.application.config.assets.precompile += %w( search.js )
 
-Rails.application.config.assets.precompile += Dir[Rails.root.join("app", "apps", "themes", "*", "assets", "**", "*.{png,jpg,gif,svg}")]
-Rails.application.config.assets.precompile += Dir[Rails.root.join("app", "apps", "themes", "*", "assets", "**", "application.css")]
-Rails.application.config.assets.precompile += Dir[Rails.root.join("app", "apps", "themes", "*", "assets", "**", "main.js")]
-Rails.application.config.assets.precompile += Dir[Rails.root.join("app", "apps", "plugins", "*", "assets", "**", "*.{js,css,png,jpg,gif}")]
+Rails.application.config.assets.precompile += Dir[Rails.root.join("app", "apps", "themes", "**", "assets", "**", "*.{png,jpg,gif,svg}")]
+Rails.application.config.assets.precompile += Dir[Rails.root.join("app", "apps", "themes", "**", "assets", "**", "application.css")]
+Rails.application.config.assets.precompile += Dir[Rails.root.join("app", "apps", "themes", "**", "assets", "**", "main.js")]
+Rails.application.config.assets.precompile += Dir[Rails.root.join("app", "apps", "plugins", "**", "assets", "**", "*.{js,css,png,jpg,gif}")]
 
 Rails.application.config.assets.precompile += Dir[File.join($camaleon_engine_dir, "app", "apps", "themes", "*", "assets", "**", "*.{js,css,png,jpg,gif}")]
 Rails.application.config.assets.precompile += Dir[File.join($camaleon_engine_dir, "app", "apps", "plugins", "*", "assets", "**", "*.{js,css,png,jpg,gif}")]
