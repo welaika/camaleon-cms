@@ -24,10 +24,15 @@ Rails.application.config.assets.version = '1.0'
 #
 # Rails.application.config.assets.precompile += Dir[File.join($camaleon_engine_dir, "app", "apps", "themes", "*", "assets", "**", "^(?!_)*.{js,css,png,jpg,gif}")]
 # Rails.application.config.assets.precompile += Dir[File.join($camaleon_engine_dir, "app", "apps", "plugins", "*", "assets", "**", "^(?!_)*.{js,css,png,jpg,gif}")]
-# Rails.application.config.assets.precompile += %w( themes/*/assets/css/^(?!_)* )
+Rails.application.config.assets.precompile += %w( themes/*/assets/css/main.css )
+Rails.application.config.assets.precompile += %w( themes/*/assets/js/main.js )
 # Rails.application.config.assets.precompile += %w( plugins/*/assets/js/^(?!_)* )
 # Rails.application.config.assets.precompile += %w( themes/*/assets/[images|img]/* )
 # Rails.application.config.assets.precompile += %w( plugins/*/assets/[images|img]/* )
-# Rails.application.config.assets.precompile += %w( plugins/*/assets/* )
+Rails.application.config.assets.precompile += %w( themes/*/assets/images/* themes/*/assets/images/**/* )
+
+Rails.application.config.assets.precompile += %w( plugins/*/assets/* )
 # This will precompile any assets, not just JavaScript (.js, .coffee, .swf, .css, .scss)
-Rails.application.config.assets.precompile << /(^[^_\/]|\/[^_])[^\/]*$/
+# Rails.application.config.assets.precompile << /(^[^_\/]|\/[^_])[^\/]*$/
+Rails.application.config.assets.precompile += %w( admin/*.css admin/**/*.css )
+Rails.application.config.assets.precompile += %w( admin/*.js admin/**/*.js)
