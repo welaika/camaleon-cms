@@ -101,7 +101,8 @@ it:
         field_attrs: 'Field Attributes'
         website: 'Website'
         multiple_choice: 'Radio Button'
-
+    header:
+      member_since: 'Membro dal'
     login:
       already_have_account: 'Hai già un account?'
       authentication: 'Autenticazione'
@@ -355,6 +356,8 @@ it:
       languages: 'Lingue'
       media: 'Media'
       menus: 'Menù'
+      main_navigation: 'Menù principale'
+      post_type: 'Post type'
       navigation: 'Navigazione'
       plugins: 'Plugin'
       settings: 'Impostazioni'
