@@ -11,28 +11,18 @@
 # Version of your assets, change this if you want to expire all your assets.
 Rails.application.config.assets.version = '1.0'
 
-# Add additional assets to the asset load path
-# Rails.application.config.assets.paths << Emoji.images_path
+# Rails.application.config.assets.precompile += %w( themes/*/assets/css/main.css )
+# Rails.application.config.assets.precompile += %w( assets/themes/*/assets/js/main.js themes/*/assets/js/main.js )
+# Rails.application.config.assets.precompile += %w( themes/*/assets/images/* themes/*/assets/images/**/* )
+# Rails.application.config.assets.precompile += %w( plugins/*/assets/* )
+# Rails.application.config.assets.precompile += %w( admin/*.css admin/**/*.css )
+# Rails.application.config.assets.precompile += %w( admin/*.js admin/**/*.js)
 
-# Precompile additional assets.
-# application.js, application.css, and all non-JS/CSS in app/assets folder are already added.
-# Rails.application.config.assets.precompile += %w( search.js )
-# Rails.application.config.assets.precompile += [/.*\.js/,/.*\.css/]
-
-# Rails.application.config.assets.precompile += Dir[Rails.root.join("app", "apps", "themes", "*", "assets", "**", "^(?!_)*.{js,css,png,jpg,gif}")]
-# Rails.application.config.assets.precompile += Dir[Rails.root.join("app", "apps", "plugins", "*", "assets", "**", "^(?!_)*.{js,css,png,jpg,gif}")]
-#
-# Rails.application.config.assets.precompile += Dir[File.join($camaleon_engine_dir, "app", "apps", "themes", "*", "assets", "**", "^(?!_)*.{js,css,png,jpg,gif}")]
-# Rails.application.config.assets.precompile += Dir[File.join($camaleon_engine_dir, "app", "apps", "plugins", "*", "assets", "**", "^(?!_)*.{js,css,png,jpg,gif}")]
-# Rails.application.config.assets.precompile += %w( plugins/*/assets/js/^(?!_)* )
-# Rails.application.config.assets.precompile += %w( themes/*/assets/[images|img]/* )
-# Rails.application.config.assets.precompile += %w( plugins/*/assets/[images|img]/* )
-
-# This will precompile any assets, not just JavaScript (.js, .coffee, .swf, .css, .scss)
-# Rails.application.config.assets.precompile << /(^[^_\/]|\/[^_])[^\/]*$/
-Rails.application.config.assets.precompile += %w( themes/*/assets/css/main.css )
-Rails.application.config.assets.precompile += %w( assets/themes/*/assets/js/main.js themes/*/assets/js/main.js )
-Rails.application.config.assets.precompile += %w( themes/*/assets/images/* themes/*/assets/images/**/* )
-Rails.application.config.assets.precompile += %w( plugins/*/assets/* )
-Rails.application.config.assets.precompile += %w( admin/*.css admin/**/*.css )
-Rails.application.config.assets.precompile += %w( admin/*.js admin/**/*.js)
+Rails.application.config.assets.precompile << Proc.new { |path|
+  content_type = MIME::Types.type_for(File.basename(path)).first.content_type rescue ""
+  res = false
+  if (path =~ /\.(css|js|svg|ttf|woff|eot|swf|pdf)\z/ || content_type.scan(/(javascript|image\/|audio|video|font)/).any?) && !path.start_with?("_")
+    res = true
+  end
+  res
+}

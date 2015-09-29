@@ -1,3 +1,18 @@
+require 'rubygems'
+require 'actionpack/page_caching'
+require 'bcrypt'
+require 'cancancan'
+require 'draper'
+require 'dynamic_sitemaps'
+require 'el_finder'
+require 'meta-tags'
+require 'mini_magick'
+require 'mobu'
+require 'protected_attributes'
+require 'rufus-scheduler'
+require 'will_paginate'
+require 'will_paginate-bootstrap'
+
 $camaleon_engine_dir = File.expand_path("../../../", __FILE__)
 require File.join($camaleon_engine_dir, "lib", "plugin_routes").to_s
 Dir[File.join($camaleon_engine_dir, "lib", "ext", "**", "*.rb")].each{ |f| require f }
@@ -32,7 +47,7 @@ module CamaleonCms
       # Dir[File.join(engine_dir, "config", "routes", "*.rb")].each{|r| app.routes_reloader.paths.unshift(r) }
 
       # extra configuration for plugins
-      app.config.autoload_paths += %W{#{app.config.root}/app/apps/**/}
+      app.config.eager_load_paths += %W(#{app.config.root}/app/apps/**/)
       PluginRoutes.all_plugins.each{ |plugin| app.config.paths["db/migrate"] << File.join(plugin["path"], "migrate") if Dir.exist?(File.join(plugin["path"], "migrate")) }
 
       # migrations checking

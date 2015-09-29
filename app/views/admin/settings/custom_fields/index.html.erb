@@ -1,17 +1,11 @@
-<div class="page-title">
-  <h2><span class="fa fa-cog"></span> <%= t('admin.settings.list_custom_fields_group') %></h2>
-</div>
-
 <!-- PAGE CONTENT WRAPPER -->
 <div class="page-content-wrap">
-
   <div class="row">
     <div class="col-md-12">
-
       <!-- START BASIC TABLE SAMPLE -->
       <div class="panel panel-default">
         <div class="panel-heading">
-          <h3 class="panel-title"><%= t('admin.page_title.list') %></h3>
+            <h4 class="pull-left"><span class="fa fa-cog"></span> <%= t('admin.settings.list_custom_fields_group') %></h4>
           <%= link_to raw("<i class='fa fa-plus'></i> #{t('admin.settings.add_field_group')}"), {action: :new}, class: "btn btn-primary pull-right" %>
         </div>
         <div class="panel-body">
@@ -46,7 +40,7 @@
             </tbody>
           </table>
           <%= content_tag("div", raw(t('admin.message.data_found_list')), class: "alert alert-warning") if @field_groups.empty? %>
-          <%= will_paginate @field_groups, renderer: BootstrapPagination::Rails  %>
+            <%= raw do_pagination(@field_groups) %>
         </div>
       </div>
       <!-- END BASIC TABLE SAMPLE -->
@@ -55,14 +49,13 @@
 </div>
 
 <script>
-  run.push(function(){
+jQuery(function($){
       $('#table_custom_groups').table_order({url: '<%= reorder_admin_settings_custom_fields_path %>', on_success: function(obj){
           if(obj.res.error){
               $.fn.alert({title: obj.res.error, type: 'error'})
           }else{
               $.fn.alert({title: 'Order Successfully'})
           }
-
       }})
   })
 </script>

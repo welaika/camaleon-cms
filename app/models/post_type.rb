@@ -12,8 +12,8 @@ class PostType < TermTaxonomy
   has_many :metas, ->{ where(object_class: 'PostType')}, :class_name => "Meta", foreign_key: :objectid, dependent: :destroy
   has_many :categories, :class_name => "Category", foreign_key: :parent_id, dependent: :destroy
   has_many :post_tags, :class_name => "PostTag", foreign_key: :parent_id, dependent: :destroy
-  has_many :post_relationships, :class_name => "PostRelationship", dependent: :destroy, :foreign_key => :term_taxonomy_id, inverse_of: :post_type
-  has_many :posts, foreign_key: :objectid, through: :post_relationships, :source => :posts, dependent: :destroy
+  has_many :posts, class_name: "Post", foreign_key: :taxonomy_id, dependent: :destroy
+  has_many :posts_draft, class_name: "Post", foreign_key: :taxonomy_id, dependent: :destroy, source: :drafts
   has_many :field_group_taxonomy, -> {where("object_class LIKE ?","PostType_%")}, :class_name => "CustomField", foreign_key: :objectid, dependent: :destroy
 
   belongs_to :owner, class_name: "User", foreign_key: :user_id
@@ -68,20 +68,6 @@ class PostType < TermTaxonomy
     self.set_option(key, value)
   end
 
-  # object: [category, post, post_tags]
-  def field_object_values(key, object)
-    field = fields.where(slug: key).first
-    field.present? ? field.values.where(objectid: object.id, object_class: object.class.to_s.gsub("Decorator","")).pluck(:value) : []
-  end
-
-  def field_object_value(key, object)
-    field_object_values(key, object).first
-  end
-
-  def get_post_content(key)
-    posts.rewhere(post_type: key)
-  end
-
   # select full_categories for the post type, include all children categories
   def full_categories
     s = self.site
@@ -105,18 +91,32 @@ class PostType < TermTaxonomy
   #   title: title for post,    => required
   #   content: html text content, => required
   #   thumb: image url, => default (empty). check http://camaleon.tuzitio.com/api-methods.html#section_fileuploads
-  #   has_comments: 0|1,        => default (0)
   #   categories: [1,3,4,5],    => default (empty)
   #   tags: String comma separated, => default (empty)
   #   slug: string key for post,    => default (empty)
-  #   summary: String resume (optional)}  => default (empty)
+  #   summary: String resume (optional)  => default (empty)
+  #   order_position: Integer to define the order position in the list (optional)
+  #   fields: Hash of values for custom fields, sample => fields: {subtitle: 'abc', icon: 'test' } (optional)
+  #   settings: Hash of post settings, sample => settings: {has_content: false, has_summary: true } (optional, see more in post.set_setting(...))
   # return created post if it was created, else return errors
   def add_post(args)
-    p = self.posts.new({has_comments: 0}.merge(args))
+    _fields = args.delete(:fields)
+    _settings = args.delete(:settings)
+    _summary = args.delete(:summary)
+    _order_position = args.delete(:order_position)
+    _categories = args.delete(:categories)
+    _tags = args.delete(:tags)
+    _thumb = args.delete(:thumb)
+    p = self.posts.new(args)
     p.slug = self.site.get_valid_post_slug(p.title.parameterize) unless p.slug.present?
-    if p.save
-      p.assign_category(args[:categories]) if args[:categories].present? && self.manage_categories?
-      p.assign_tags(args[:tags]) if args[:tags].present? && self.manage_tags?
+    if p.save!
+      _settings.each{ |k, v| p.set_setting(k, v) } if _settings.present?
+      p.assign_category(_categories) if _categories.present? && self.manage_categories?
+      p.assign_tags(_tags) if _tags.present? && self.manage_tags?
+      p.set_position(_order_position) if _order_position.present?
+      p.set_summary(_summary) if _summary.present?
+      p.set_thumb(_thumb) if _thumb.present?
+      _fields.each{ |k, v| p.save_field_value(k, v) } if _fields.present?
       return p
     else
       p.errors
@@ -124,6 +124,7 @@ class PostType < TermTaxonomy
   end
 
   private
+  # assign default roles for this post type
   def set_default_site_user_roles
     self.site.set_default_user_roles(self)
   end

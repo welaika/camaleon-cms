@@ -31,7 +31,7 @@ function build_custom_field(values, multiple, field_key, rand, default_value){
         });
         $sortable.delegate('.actions .fa-times', "click", function(){
             var parent = $(this).parents('li');
-            if(confirm(lang.message_delete_item)){
+            if(confirm(I18n("msg.delete_item"))){
                 parent.remove();
             }
             return false;
@@ -73,7 +73,9 @@ function custom_field_date($field){
         }else{
             box.datepicker({
                 language: 'es',
-                format: 'yyyy-mm-dd'
+                format: 'yyyy-mm-dd',
+                autoclose: true,
+                todayBtn: "linked"
             });
         }
     }

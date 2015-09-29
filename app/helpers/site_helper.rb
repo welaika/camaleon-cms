@@ -51,17 +51,28 @@ module SiteHelper
     @_current_theme ||= current_site.get_theme.decorate
   end
 
-  # get list templates files
+  # get list templates files of current theme
   def get_list_template_files
-    base_path = Rails.root.join("app", "apps", 'themes', current_theme.slug, 'views')
-    base_path = Pathname.new(base_path)
     contained_files = []
-    Dir[File.join(base_path, '*.html.erb')].each do |full_path|
-      path = Pathname.new(full_path).relative_path_from(base_path).to_s
-      contained_files << path if path.include?('template_')
+    Dir[File.join(current_theme.settings["path"], "views", '*')].each do |path|
+      f_name = File.basename(path)
+      contained_files << f_name.split(".").first if f_name.include?('template_')
     end
     contained_files
   end
+
+  # get list layouts files of current theme
+  # return an array of layouts for current theme
+  def get_list_layouts_files
+    contained_files = []
+    Dir[File.join(current_theme.settings["path"], "views", "layouts", '*')].each do |path|
+      f_name = File.basename(path)
+      contained_files << f_name.split(".").first unless f_name.start_with?('_')
+    end
+    contained_files
+  end
+
+
 
   # get locale language
   def current_locale

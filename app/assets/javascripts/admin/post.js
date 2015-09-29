@@ -4,7 +4,7 @@ function init_post(obj){
     $form = $('#form-post');
 
     if(obj.recover_draft == "true"){
-        $form.css('opacity',0).before('<h2 style="text-align: center">'+lang.mgs_recover+'</h2>');
+        $form.css('opacity',0).before('<h2 style="text-align: center">'+I18n("msg.recover")+'</h2>');
     }
 
     var _draft_inited = false;
@@ -49,14 +49,14 @@ function init_post(obj){
     App_post.save_draft = function(){
         App_post.save_draft_ajax(function(){
             $form.data("submitted", 1);
-            location.href = _posts_path+'?notice='+lang.post_draft
+            location.href = _posts_path+'?notice='+I18n("msg.draft")
         });
 
     }
 
     var t = setInterval(function(){
         App_post.save_draft_ajax();
-    }, 1*60*1000);
+    }, 3*60*1000);
 
     window.save_draft = App_post.save_draft_ajax;
 
@@ -74,10 +74,10 @@ function init_post(obj){
             }
 
             var $link = $('<div class="sl-slug-edit">' +
-            '<strong>'+lang.permalink+':&nbsp;</strong><span class="sl-link"></span> <span>/ &nbsp;&nbsp;</span>' +
-            '<a href="#" class="btn btn-default btn-xs btn-edit">'+lang.edit+'</a> &nbsp;&nbsp; ' +
-            '<a href="#" class="btn btn-info btn-xs btn-preview" target="_blank">'+lang.preview+'</a> &nbsp;&nbsp; ' +
-            '<a href="#" class="btn btn-success btn-xs btn-view" style="display: none" target="_blank">'+lang.view_page+'</a>' +
+            '<strong>'+I18n("msg.permalink")+':&nbsp;</strong><span class="sl-link"></span> <span>/ &nbsp;&nbsp;</span>' +
+            '<a href="#" class="btn btn-default btn-xs btn-edit">'+I18n("button.edit")+'</a> &nbsp;&nbsp; ' +
+            '<a href="#" class="btn btn-info btn-xs btn-preview" target="_blank">'+I18n("msg.preview")+'</a> &nbsp;&nbsp; ' +
+            '<a href="#" class="btn btn-success btn-xs btn-view" style="display: none" target="_blank">'+I18n("msg.view_page")+'</a>' +
             '</div>').hide();
             $this.addClass('sluged');
             $this.after($link)
@@ -134,7 +134,7 @@ function init_post(obj){
             });
             $link.find('.btn-edit').click(function(){      log(lang);
                 var $btn = $(this);
-                var $btn_edit = $('<a href="#" class="btn btn-default btn-xs btn-edit">'+lang.accept+'</a> &nbsp; <a href="#"  class="btn-cancel">'+lang.cancel+'</a>');
+                var $btn_edit = $('<a href="#" class="btn btn-default btn-xs btn-edit">'+I18n("button.accept")+'</a> &nbsp; <a href="#"  class="btn-cancel">'+I18n("button.cancel")+'</a>');
                 var $label = $link.find('.sl-url');
                 var $input = $("<input type='text' />");
                 $label.hide().after($input);
@@ -170,23 +170,7 @@ function init_post(obj){
 
     tinymce.init($.extend({}, DATA.tiny_mce.advanced, {selector: '.tinymce_textarea:not(.translated-item)', language: CURRENT_LOCALE, height: '480px', onPostRender: onEditorPostRender}));
 
-    $form.validate({ focusInvalid: true, ignore: ".translated-item", errorPlacement: function (a,b) {
-        if(b.parent().hasClass('form-group')){
-            b.parent().addClass('has-error').append(a.addClass('help-block'));
-        }else if(b.parent().hasClass('tab-pane')){ // tabs
-            var parent = b.parent();
-            $("a[href='#"+ parent.attr('id') +"']").addClass('has-error').trigger('click');
-            parent.addClass('has-error').append(a.addClass('help-block'));
-        }else{
-            if(b.attr('name') == 'categories[]')
-                b.parent().before(a.addClass('help-block')).parent().addClass('has-error');
-            else
-                b.parent().after(a.addClass('help-block')).parent().addClass('has-error');
-        }
-    }, success: function(error, element){
-        $(element).parent().removeClass('has-error').parent().removeClass('has-error')
-        if($(element).parent().hasClass('tab-pane')) $("a[href='#"+ $(element).parent().attr('id') +"']").removeClass('has-error');
-    } });
+    $form.validate();
     /*
     * skip translation inputs
     submitHandler: function(form){
@@ -206,9 +190,7 @@ function init_post(obj){
         var panel_scroll = $("#form-post > .content-frame-right");
         var fixed_position = panel_scroll.children(":first");
         var fixed_offset_top = panel_scroll.offset().top;
-        $(window).scroll(function(){ if($(window).width() < 1024){ fixed_position.css({position: "", width: ""}); panel_scroll.css("padding-top", ""); return; } if ($(window).scrollTop() >= fixed_offset_top+10){ fixed_position.css({position: "fixed", width: "279px", top: 0, "z-index": 4}); panel_scroll.css("padding-top", fixed_position.height()+20) } else { fixed_position.css({position: "", width: "auto"}); panel_scroll.css("padding-top", "") }}).resize(function(){
-            if($(window).width() >= 1024){ panel_scroll.show(); }
-        });
+        $(window).scroll(function(){ if($(window).width() < 1024){ fixed_position.css({position: "", width: ""}); panel_scroll.css("padding-top", ""); return; } if ($(window).scrollTop() >= fixed_offset_top+10){ fixed_position.css({position: "fixed", width: "279px", top: 0, "z-index": 4}); panel_scroll.css("padding-top", fixed_position.height()+20) } else { fixed_position.css({position: "", width: "auto"}); panel_scroll.css("padding-top", "") }}).resize(function(){ if($(window).width() >= 1024){ panel_scroll.show(); } }).scroll();
         /*********** end scroller buttons ***************/
 
         /********** post tagEditor ******************/
@@ -222,7 +204,7 @@ function init_post(obj){
         $form.find(".tagsinput").tagEditor({
             autocomplete: { delay: 0, position: { collision: 'flip' }, source: $.parseJSON(post_tags) },
             forceLowercase: false,
-            placeholder: lang.add_tag + '...'
+            placeholder: I18n("button.add_tag") + '...'
         });
         /********** end post tagEditor **************/
         ////// thumbnail
@@ -271,4 +253,21 @@ function init_post(obj){
         $('#post_status').val('published');
         $form.submit();
     }
+}
+
+// thumbnail updloader
+function upload_feature_image(){
+    $.fn.upload_elfinder({
+        selected: function(res){
+            var image = _.first(res)
+            if(image.mime && image.mime.indexOf("image") > -1){
+                $('#feature-image img').attr('src', image.url.to_url());
+                $('#feature-image input').val(image.url.to_url());
+                $('#feature-image .meta strong').html(image.name);
+                $('#feature-image').show();
+            }else{
+                alert("You must upload an image")
+            }
+        }
+    });
 }

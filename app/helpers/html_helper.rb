@@ -14,6 +14,7 @@ module HtmlHelper
   end
 
   # enable to load admin libraries (colorpicker, datepicker, form_builder, tinymce, form_ajax, cropper)
+  # sample: add_asset_library("datepicker", "colorpicker")
   def add_asset_library(*keys)
     keys.each do |key|
       library = assets_libraries[key.to_sym]
@@ -21,8 +22,12 @@ module HtmlHelper
     end
   end
 
-  # add asset libraries (js, css)
-  # { library_key2:{ js: [], css: [] }, library_key1:{ js: [], css: [] }, ...}
+  # add custom asset libraries (js, css or both), also you can add extra css or js files for existent libraries
+  # sample: (add new library)
+  #   append_asset_libraries({"my_library_key"=> { js: [plugin_asset("js/my_js"), "plugins/myplugin/assets/js/my_js2"], css: [plugin_asset("css/my_css"), "plugins/myplugin/assets/css/my_css2"] }})
+  # sample: (update existent library)
+  #   append_asset_libraries({"colorpicker"=>{js: [[plugin_asset("js/my_custom_js")] } })
+  # return nil
   def append_asset_libraries(libraries)
     libraries.each do |key, library|
       if @_assets_libraries.include?(key)
@@ -44,6 +49,7 @@ module HtmlHelper
   # return all js libraries added [aa.js, bb,js, ..]
   # def get_assets_js
   def draw_custom_assets
+    html_helpers_init unless @_assets_libraries.present?
     libs = []
     @_assets_libraries.each do |key, assets|
       libs += assets[:css] if assets[:css].present?
@@ -94,7 +100,7 @@ module HtmlHelper
   private
   def assets_libraries
     libs = {}
-    libs[:colorpicker] = {js: ['admin/bootstrap-colorpicker']}
+    libs[:colorpicker] = {js: ['admin/bootstrap-colorpicker'], css: ["admin/colorpicker.css"]}
     libs[:datepicker] = {js: ['admin/bootstrap-datepicker']}
     libs[:datetimepicker] = {js: ['admin/bootstrap-datetimepicker.min']}
     libs[:tinymce] = {js: ['admin/tinymce/tinymce.min', "admin/tinymce/plugins/filemanager/plugin.min"], css: ["admin/tinymce/skins/lightgray/content.min"]}
@@ -104,7 +110,6 @@ module HtmlHelper
     libs[:post] = {js: ["admin/jquery.tagsinput.min", 'admin/post'], css: ["admin/jquery.tagsinput"]}
     libs[:multiselect] = {js: ['admin/bootstrap-select.js']}
     libs[:validate] = {js: ['admin/jquery.validate']}
-    libs[:custom_field] = {js: ['admin/custom_fields']}
     libs[:nav_menu] = {css: ['admin/nestable/jquery.nestable', "admin/nav-menu"], js: ["admin/jquery.nestable", 'admin/nav-menu']}
     libs[:elfinder_front] = {js: ['elfinder_front.js']}
     libs

@@ -10,7 +10,7 @@ module Admin::MenusHelper
   include Admin::BreadcrumbHelper
 
   def admin_menus_add_commons
-    admin_menu_add_menu("dashabord", {icon: "dashboard", title: t('admin.sidebar.dashboard'), url: admin_dashboard_path})
+    admin_menu_add_menu("dashboard", {icon: "dashboard", title: t('admin.sidebar.dashboard'), url: admin_dashboard_path})
     #if can? :manager, :content
     items = []
 
@@ -40,7 +40,7 @@ module Admin::MenusHelper
     admin_menu_add_menu("appearance", {icon: "paint-brush", title: t('admin.sidebar.appearance'), url: "", items: items}) if items.present?
 
 
-    admin_menu_add_menu("plugins", {icon: "plug", title: "#{t('admin.sidebar.plugins')} <div class='informer informer-info'>#{PluginRoutes.all_plugins.size}</div>", url: admin_plugins_path}) if can? :manager, :plugins
+    admin_menu_add_menu("plugins", {icon: "plug", title: "#{t('admin.sidebar.plugins')} <small class='label label-primary'>#{PluginRoutes.all_plugins.size}</small>", url: admin_plugins_path}) if can? :manager, :plugins
 
     if can? :manager, :users
       items = []
@@ -54,7 +54,7 @@ module Admin::MenusHelper
       items = []
       items << {icon: "desktop", title: t('admin.sidebar.general_site'), url: admin_settings_site_path}
       items << {icon: "cog", title: t('admin.sidebar.sites'), url: admin_settings_sites_path} if current_site.manage_sites?
-      items << {icon: "files-o", title: t('admin.sidebar.contents_type'), url: admin_settings_post_types_path}
+      items << {icon: "files-o", title: t('admin.sidebar.post_type'), url: admin_settings_post_types_path}
       items << {icon: "cog", title: t('admin.sidebar.custom_fields'), url: admin_settings_custom_fields_path}
       items << {icon: "language", title: t('admin.sidebar.languages'), url: admin_settings_languages_path}
       admin_menu_add_menu("settings", {icon: "cogs", title: t('admin.sidebar.settings'), url: "", items: items})
@@ -119,8 +119,8 @@ module Admin::MenusHelper
     @_tmp_menu_parents = []
     menus = _get_url_current
     menus.each do |menu|
-      res << "<li data-key='#{menu[:key]}' class='#{"xn-openable" if menu.has_key?(:items)} #{'active' if is_active_menu(menu[:key])}'>
-        <a href='#{menu[:url]}'><span class='fa fa-#{menu[:icon]}'></span> <span class='xn-text'>#{menu[:title]}</span></a>
+      res << "<li data-key='#{menu[:key]}' class='#{"treeview" if menu.has_key?(:items)} #{'active' if is_active_menu(menu[:key])}'>
+        <a href='#{menu[:url]}'><i class='fa fa-#{menu[:icon]}'></i> <span class=''>#{menu[:title]}</span> #{'<i class="fa fa-angle-left pull-right"></i>' if menu.has_key?(:items) }</a>
         #{_admin_menu_draw(menu[:items]) if menu.has_key?(:items)}
       </li>"
     end
@@ -175,10 +175,10 @@ module Admin::MenusHelper
 
   def _admin_menu_draw(items)
     res = []
-    res  << "<ul>"
+    res  << "<ul class='treeview-menu'>"
     items.each do |item|
       res  << "<li class='#{"xn-openable" if item.has_key?(:items)} #{'active' if is_active_menu(item[:key])}'>
-                <a href='#{item[:url]}'><span class='fa fa-#{item[:icon]}'></span> #{item[:title]}</a>
+                <a href='#{item[:url]}'><i class='fa fa-#{item[:icon]}'></i> #{item[:title]} #{'<i class="fa fa-angle-left pull-right"></i>' if item.has_key?(:items) }</a>
                 #{_admin_menu_draw(item[:items]) if item.has_key?(:items)}
               </li>"
     end
@@ -189,7 +189,7 @@ module Admin::MenusHelper
   def _admin_menu_draw_active
     bread = []
     @_tmp_menu_parents.uniq.each do |item|
-      bread << [item[:title].to_s.strip_tags, item[:url]] if item.present? && item[:key] != "dashabord"
+      bread << [item[:title].to_s.strip_tags, item[:url]] if item.present? && item[:key] != "dashboard"
     end
     @_admin_breadcrumb = [[t('admin.sidebar.dashboard'), admin_dashboard_path]] + bread + @_admin_breadcrumb
   end

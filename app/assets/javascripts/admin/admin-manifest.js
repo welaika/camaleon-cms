@@ -16,19 +16,27 @@
 //= require ./jquery-ui.min
 //= require ./underscore
 //= require ./jquery.validate
-//= require ./actions
+
+//= require jquery_ujs
+
 //= require ./elfinder/elfinder.full
 //= require ./elfinder/proxy/elFinderSupportVer1
 //= require ./elfinder/upload_elfinder
 
 //= require ./jquery.slugify
 //= require ./translator
-//= require ./core
 //= require ./i18n
+//= require ./custom_fields
 
-//= require jquery_ujs
+//= require ./libraries
+//= require ./actions
+
+
 //= require ./modal
 //= require ./grid-editor
 
 //= require ./tageditor/jquery.caret.min
 //= require ./tageditor/jquery.tag-editor
+
+//= require ./lte/app
+

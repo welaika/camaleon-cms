@@ -1,6 +1,6 @@
 // options:
 // - title: Title Modal, default: Upload File
-// - type: image, video, audio, application/pdf,... default: 'all'
+// - type: image, video, audio, application/pdf or file extensions (jpg, png, ..),... default: 'all'
 // - multiple: return array files or uniq file, default: true
 //  - mode, menubar icons visibility, default: basic,  values: full, basic
 // - params: in mode basic use options toolbar: default: [], example: ['resize','mkdir']
@@ -92,7 +92,7 @@
                             var datas = [];
                             for(var i=0; i<selected.length;i++){
                                 var file = elfinderInstance.file(selected[i]);
-                                if(file.mime && (mime_type == "all" || $.inArray(true, mime_type.split(",").map(function(format){ return file.mime.indexOf(format) > -1 })) >= 0)){
+                                if(file.mime && (mime_type == "all" || $.inArray(true, mime_type.split(",").map(function(format){ return file.mime.indexOf(format) > -1 })) >= 0 || $.inArray(file.name.split(".").pop().toLowerCase(), mime_type.split(",")) > -1 )){
                                     if(file.size > 0) datas.push(file);
                                 }
                             }
@@ -202,8 +202,8 @@
                 "</div>"+
                 "<div id='panel-info-content' class='row'>"+
                 "<p class='col-md-12'>"+content_elfinder.messages.size+" : <span>"+content_elfinder.formatSize(elemFirst.size)+"</span></p>"+
-                "<p class='col-md-12'>URL : <span><input type='text' onClick='this.select();' value='"+elemFirst.url.to_url()+"' /></span></p>"+
-                (is_image_data(elemFirst) ? "<p class='col-md-12'>"+content_elfinder.messages.thumb+" : <span><input type='text' onClick='this.select();' value='"+ (elemFirst.tmb != "1" ? elemFirst.tmb.toString().to_url() : elemFirst.url.to_url()) +"' /></span></p>" : "")+
+                "<p class='col-md-12'>URL : <span><input type='text' value='"+elemFirst.url.to_url()+"' /></span></p>"+
+                (is_image_data(elemFirst) ? "<p class='col-md-12'>"+content_elfinder.messages.thumb+" : <span><input type='text' value='"+ (elemFirst.tmb != "1" ? elemFirst.tmb.toString().to_url() : elemFirst.url.to_url()) +"' /></span></p>" : "")+
                 "<p class='col-md-12'>"+content_elfinder.messages.dim+" :  <span>"+elemFirst.dim+"</span></p>"+
                 "<p class='col-md-12'>"+content_elfinder.messages.modify+"  :  <span>"+elemFirst.date.replace('-0400','')+"</span></p>"+
                 "</div>";

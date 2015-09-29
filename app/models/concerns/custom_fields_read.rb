@@ -10,6 +10,7 @@ module CustomFieldsRead extend ActiveSupport::Concern
   included do
     has_many :fields, ->(object){ where(:object_class => object.class.to_s.gsub("Decorator",""))} , :class_name => "CustomField" ,foreign_key: :objectid
     has_many :field_values, ->(object){where(object_class: object.class.to_s.gsub("Decorator",""))}, :class_name => "CustomFieldsRelationship", foreign_key: :objectid, dependent: :destroy
+    has_many :custom_field_values, :class_name => "CustomFieldsRelationship", foreign_key: :objectid, dependent: :destroy
     before_destroy :_destroy_custom_field_groups
   end
 
@@ -38,6 +39,9 @@ module CustomFieldsRead extend ActiveSupport::Concern
         self.site.custom_field_groups.where(object_class: class_name, objectid:  self.id)
       when 'Site'
         self.custom_field_groups.where(object_class: class_name)
+      when 'NavMenuItem'
+        # self.main_menu.custom_field_groups //verify this problem
+        NavMenu.find(self.main_menu.id).get_field_groups
       when 'PostType'
         if args[:kind] == "all"
           self.site.custom_field_groups.where(object_class: ["PostType_Post", "PostType_Post", "PostType_PostTag", "PostType"], objectid:  self.id )
@@ -63,6 +67,7 @@ module CustomFieldsRead extend ActiveSupport::Concern
   # get custom field value
   # _key: custom field key
   # if value is not present, then return default
+  # return default only if the field was not registered
   def get_field_value(_key, _default = nil)
     v = _default
     v = get_field_values(_key).first rescue _default
@@ -71,11 +76,19 @@ module CustomFieldsRead extend ActiveSupport::Concern
   end
   alias_method :get_field, :get_field_value
 
+  # the same as the_field() but if the value is not present, this will return default value
+  def get_field!(_key, _default = nil)
+    v = _default
+    v = get_field_values(_key).first rescue _default
+    v.present? ? v : _default
+  end
+
   # get custom field values
   # _key: custom field key
   def get_field_values(_key)
     self.field_values.where(custom_field_slug: _key).pluck(:value)
   end
+  alias_method :get_fields, :get_field_values
 
   # ------------- new function update field value -------------
   def update_field_value(_key, value = nil)
@@ -206,14 +219,12 @@ module CustomFieldsRead extend ActiveSupport::Concern
   def _destroy_custom_field_groups
     class_name = self.class.to_s.gsub("Decorator","")
     if ['Category','Post','PostTag'].include?(class_name)
-      # get_field_groups("Post").destroy_all
       CustomFieldGroup.where(objectid: self.id, object_class: class_name).destroy_all
     elsif ['PostType'].include?(class_name)
       get_field_groups("Post").destroy_all
       get_field_groups("Category").destroy_all
       get_field_groups("PostTag").destroy_all
-    elsif ["NavMenuItem"].include?(class_name)
-
+    elsif ["NavMenuItem"].include?(class_name) # menu items doesn't include field groups
     else
       get_field_groups().destroy_all if get_field_groups.present?
     end

@@ -29,10 +29,14 @@ end
 
 class Post < PostDefault
   include CategoriesTagsForPosts
-  default_scope ->{ where(post_class: self.name) }
+  default_scope ->{ where(post_class: self.name).order(post_order: :asc) }
   has_many :metas, ->{ where(object_class: 'Post')}, :class_name => "Meta", foreign_key: :objectid, dependent: :destroy
+
+  # DEPRECATED
   has_many :post_relationships, class_name: "PostRelationship", foreign_key: :objectid, dependent: :destroy,  inverse_of: :posts
   has_many :post_types, class_name: "PostType", through: :post_relationships, :source => :post_type
+  # END DEPRECATED
+
   has_many :term_relationships, class_name: "TermRelationship", foreign_key: :objectid, dependent: :destroy,  inverse_of: :objects
   has_many :categories, class_name: "Category", through: :term_relationships, :source => :term_taxonomies
   has_many :post_tags, class_name: "PostTag", through: :term_relationships, :source => :term_taxonomies
@@ -42,6 +46,7 @@ class Post < PostDefault
 
   belongs_to :owner, class_name: "User", foreign_key: :user_id
   belongs_to :parent, class_name: "Post", foreign_key: :post_parent
+  belongs_to :post_type, class_name: "PostType", foreign_key: :taxonomy_id
 
   scope :visible_frontend, -> {where(status: 'published')}
   scope :public_posts, -> {visible_frontend.where(visibility: ['public', ""]) } #public posts (not passwords, not privates)
@@ -55,21 +60,14 @@ class Post < PostDefault
 
   validates_with PostUniqValidator
 
-  def post_type=(pt)
-    @_cache_post_type = pt
-  end
-  def post_type
-    @_cache_post_type ||= (post_types.reorder(nil).first || post_relationships.first.post_type)
+  # return the post type of this post (DEPRECATED)
+  def get_post_type_depre
+    post_types.reorder(nil).first
   end
 
   # return template assigned to this post
   def template
     get_meta("template", "")
-  end
-
-  # return default template assigned to this post
-  def default_template
-    get_option("default_template")
   end
 
   # check if this post was published
@@ -95,48 +93,47 @@ class Post < PostDefault
   # check if current post can manage content
   # return boolean
   def manage_content?(posttype = nil)
-    get_option('has_content', false) || (posttype || self.post_type).get_option('has_content', true)
+    get_option('has_content', (posttype || self.post_type).get_option('has_content', true))
   end
 
   # check if current post can manage summary
   # return boolean
   def manage_summary?(posttype = nil)
-    get_option('has_summary', false) || (posttype || self.post_type).get_option('has_summary', true)
+    get_option('has_summary', (posttype || self.post_type).get_option('has_summary', true))
   end
 
   # check if current post can manage keywords
   # return boolean
   def manage_keywords?(posttype = nil)
-    get_option('has_keywords', false) || (posttype || self.post_type).get_option('has_keywords', true)
+    get_option('has_keywords', (posttype || self.post_type).get_option('has_keywords', true))
   end
 
   # check if current post can manage picture
   # return boolean
   def manage_picture?(posttype = nil)
-    get_option('has_picture', false) || (posttype || self.post_type).get_option('has_picture', true)
+    get_option('has_picture', (posttype || self.post_type).get_option('has_picture', true))
   end
 
   # check if current post can manage template
   # return boolean
   def manage_template?(posttype = nil)
-    get_option('has_template', false) || (posttype || self.post_type).get_option('has_template', true)
+    get_option('has_template', (posttype || self.post_type).get_option('has_template', true))
   end
 
   # check if current post can manage comments
   # return boolean
   def manage_comments?(posttype = nil)
-    get_option('has_comments', false) || (posttype || self.post_type).get_option('has_comments', false)
+    get_option('has_comments', (posttype || self.post_type).get_option('has_comments', false))
   end
 
   # define post configuration for current post
   # possible key values (String):
-  #   has_content, boolean
-  #   has_summary, boolean
-  #   has_keywords, boolean
-  #   has_picture, boolean
-  #   has_template, boolean
-  #   has_comments, boolean
-  #   default_template: template name rendered by default, the value accept a String
+  #   has_content, boolean (default true)
+  #   has_summary, boolean (default true)
+  #   has_keywords, boolean (default true)
+  #   has_picture, boolean (default true)
+  #   has_template, boolean (default true)
+  #   has_comments, boolean (default false)
   # val: value for the setting
   def set_setting(key, val)
     set_option(key, val)
@@ -145,7 +142,42 @@ class Post < PostDefault
   # assign multiple settings
   def set_settings(settings = {})
     settings.each do |key, val|
-      set_option(key, val)
+      set_setting(key, val)
     end
+  end
+
+  # put a new order position for this post
+  # new_order_position: (Integer) position number
+  # return nil
+  def set_position(new_order_position)
+    self.update_column("post_order", new_order_position)
+  end
+
+  # save the summary for current post
+  # summary: Text String without html
+  def set_summary(summary)
+    set_meta("summary", summary)
+  end
+
+  # save the thumbnail url for current post
+  # thumb_url: String url
+  def set_thumb(thumb_url)
+    set_meta("thumb", thumb_url)
+  end
+
+  # increment the counter of visitors
+  def increment_visits!
+    set_meta("visits", total_visits+1)
+  end
+
+  # return the quantity of visits for this post
+  def total_visits
+    get_meta("visits", 0).to_i
+  end
+
+  # return the quantity of comments for this post
+  # TODO comments count
+  def total_comments
+    self.get_meta("comments_count", 0).to_i
   end
 end

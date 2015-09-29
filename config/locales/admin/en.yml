@@ -1,6 +1,8 @@
 en:
   camaleon_message: "Welcome to Camaleon CMS"
   admin:
+    header:
+      member_since: "Member since %{time}"
     button:
      activity: 'Activity'
      add_new_field: 'Add new field'
@@ -137,6 +139,7 @@ en:
       first_name: "First Name"
       last_name: "Last Name"
       email: "Email"
+      remember_me: "Remember Me"
     logout:
       log: 'Log'
       out: 'Out'
@@ -241,9 +244,9 @@ en:
       message:
         error: 'Error class'
         error_term: 'Error term class'
-        created: 'Saved Correct'
-        updated: 'Update Correct'
-        deleted: 'Correct Deleted'
+        created: 'Saved'
+        updated: 'Updated'
+        deleted: 'Deleted'
         no_created_html: '<br> No %{taxonomy} found'
       pending: 'Pending'
       permit_comments: 'Allow Comments?'
@@ -257,6 +260,7 @@ en:
       summary: 'Summary'
       tags: 'Tags'
       template: 'Template'
+      layout: 'Layout'
       trash: 'Trash'
       tooltip:
         permission_asing_categories: 'Permission to assign categories'
@@ -345,7 +349,6 @@ en:
       appearance: 'Appearance'
       comments: 'Comments'
       content: 'Content'
-      contents_type: 'Contents Type'
       custom_fields: 'Custom Fields'
       dashboard: 'Dashboard'
       general_site: 'General Site'
@@ -355,6 +358,7 @@ en:
       menus: 'Menus'
       navigation: 'Navigation'
       plugins: 'Plugins'
+      post_type: 'Post Type'
       settings: 'Settings'
       site_settings: 'Site settings'
       sites: 'Sites'
@@ -362,6 +366,7 @@ en:
       users: 'Users'
       widget: 'Widget'
       widgets: 'Widgets'
+      main_navigation: "MAIN NAVIGATION"
     sidebar_top:
       admin_panel: 'Admin. Panel'
       visit: 'Visit'
@@ -476,6 +481,8 @@ en:
       visibility: 'Visibility'
       page_404: '404 Page'
       youtube: 'Youtube'
+      more_actions: 'More actions'
+      more_actions_info: 'More actions...'
     themes:
       footer_copyright: 'Footer Copyright'
       theme_select: 'Select Theme'
@@ -484,7 +491,7 @@ en:
       social_share: 'Social share'
 
       message:
-        updated: 'Updated Theme.'
+        updated: 'Theme updated'
     users:
       all_users: 'All Users'
       add_user: 'Add User'

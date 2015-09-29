@@ -112,7 +112,7 @@
                     var option_default_values = <%= raw(@item_options_value[:multiple_options].present? ? @item_options_value[:multiple_options].to_json : '[]') %>
                     function add_option_default(values){
                         if(!values) values = {}
-                        values = $.extend({title: lang.option_title, value: '1',default: false},values)
+                        values = $.extend({title: I18n("msg.option_title"), value: '1',default: false},values)
                         var $option = $('<li>'+option_default_html+'</li>');
                         $option.find('.option-name').val(values.title);
                         $option.find('.option-value').val(values.value);
@@ -145,8 +145,7 @@
                     })
                     $('#clone<%= @index %>').remove();
                 }
-                if(typeof jQuery == 'function') jQuery(function_init_options<%= @index %>);
-                else run.push(function_init_options<%= @index %>);
+                jQuery(function_init_options<%= @index %>);
               </script>
             </div>
         </div>
@@ -172,11 +171,9 @@
     <% if @field_config[:options][:translate] %>
         <div class="checkbox"><label><%= check_box(:field_options, 'translate', index: @index, checked: @item_options_value[:translate].to_s.to_bool) %> <%= t('admin.table.translate_field_int') %> </label> <%= raw html_tooltip(t('admin.table.translate_field_int'),'right')%></div>
     <% end %>
-    <% if @field_config[:options][:show_frontend] %>
+    <% if false && @field_config[:options][:show_frontend] %>
         <div class="checkbox"><label><%= check_box(:field_options, 'show_frontend', index: @index, checked: @item_options_value[:show_frontend].to_s.to_bool) %> <%= t('admin.table.show_in_frontend') %> </label> <%= raw html_tooltip( t('admin.table.show_in_frontend'),'right')%></div>
     <% end %>
-
-
   </div>
 </div>
 
