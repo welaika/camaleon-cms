@@ -11,17 +11,15 @@
 # Version of your assets, change this if you want to expire all your assets.
 Rails.application.config.assets.version = '1.0'
 
-# Rails.application.config.assets.precompile += %w( themes/*/assets/css/main.css )
-# Rails.application.config.assets.precompile += %w( assets/themes/*/assets/js/main.js themes/*/assets/js/main.js )
-# Rails.application.config.assets.precompile += %w( themes/*/assets/images/* themes/*/assets/images/**/* )
-# Rails.application.config.assets.precompile += %w( plugins/*/assets/* )
-# Rails.application.config.assets.precompile += %w( admin/*.css admin/**/*.css )
-# Rails.application.config.assets.precompile += %w( admin/*.js admin/**/*.js)
+# Add additional assets to the asset load path
+# Rails.application.config.assets.paths << Emoji.images_path
 
+# This will precompile any assets, not just JavaScript (.js, .coffee, .swf, .css, .scss)
 Rails.application.config.assets.precompile << Proc.new { |path|
-  content_type = MIME::Types.type_for(File.basename(path)).first.content_type rescue ""
+  name = File.basename(path)
+  content_type = MIME::Types.type_for(name).first.content_type rescue ""
   res = false
-  if (path =~ /\.(css|js|svg|ttf|woff|eot|swf|pdf)\z/ || content_type.scan(/(javascript|image\/|audio|video|font)/).any?) && !path.start_with?("_")
+  if (path =~ /\.(css|js|svg|ttf|woff|eot|swf|pdf)\z/ || content_type.scan(/(javascript|image\/|audio|video|font)/).any?) && !name.start_with?("_") && !path.include?('/views/')
     res = true
   end
   res

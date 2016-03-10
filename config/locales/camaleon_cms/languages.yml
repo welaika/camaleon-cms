@@ -1,0 +1,59 @@
+en:
+  languages:
+    es: "Spanish"
+    en: "English"
+    fr: "French"
+    zh: "Chinese"
+    de: "Deutsch"
+    pt: "Português"
+    it: "Italian"
+    ru: "Russian"
+    nl: "Dutch"
+
+es:
+  languages:
+    es: "Español"
+    en: "Inglés"
+    fr: "Francés"
+    zh: "Chino"
+    de: "Alemán"
+    pt: "Portugues"
+    it: "Italiano"
+    ru: "Russian"
+    nl: "Holandés"
+
+it:
+  languages:
+    es: "Spagnolo"
+    en: "Inglese"
+    fr: "Francese"
+    zh: "Cinese"
+    de: "Tedesco"
+    pt: "Portoghese"
+    it: "Italiano"
+    ru: "Russian"
+    nl: "Olandese"
+
+ru:
+  languages:
+    es: "Испанский"
+    en: "Английский"
+    fr: "Французский"
+    zh: "Китайский"
+    de: "Немецкий"
+    pt: "Португальский"
+    it: "Итальянский"
+    ru: "Русский"
+    nl: "Голландский"
+
+nl:
+  languages:
+    es: "Spaans"
+    en: "Engels"
+    fr: "Frans"
+    zh: "Chinees"
+    de: "Duits"
+    pt: "Portugees"
+    it: "Italiaans"
+    ru: "Russisch"
+    nl: "Nederlands"

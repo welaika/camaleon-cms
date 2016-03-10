@@ -21,21 +21,29 @@ Gem::Specification.new do |s|
   # s.post_install_message = "Thank you for install Camaleon CMS."
 
 
-  s.files = Dir["{app,config,db,lib}/**/*", "MIT-LICENSE", "Rakefile", "README.md"]
+  s.files = Dir["{app,config,db,lib}/**/*", "MIT-LICENSE", "Rakefile", "README.md", "public/**/*"]
   s.test_files = Dir["test/**/*"]
 
   # deprecated in Rails 4
-  s.add_dependency 'actionpack-page_caching'
   s.add_dependency 'bcrypt'
   s.add_dependency 'cancancan', '~> 1.10'
   s.add_dependency 'draper', '~> 1.3'
-  s.add_dependency 'dynamic_sitemaps'
-  s.add_dependency 'el_finder'
-  s.add_dependency 'meta-tags'
+  s.add_dependency 'meta-tags', '~> 2.0'
   s.add_dependency 'mini_magick'
   s.add_dependency 'mobu'
-  s.add_dependency 'protected_attributes'
-  s.add_dependency 'rufus-scheduler'
   s.add_dependency 'will_paginate'
   s.add_dependency 'will_paginate-bootstrap'
+  s.add_dependency 'breadcrumbs_on_rails'
+  s.add_dependency 'font-awesome-rails'
+
+  s.add_dependency 'protected_attributes' # remove in next versions
+
+  # MEDIA MANAGER
+  s.add_dependency 'fog', '~> 1.34'
+  s.add_dependency 'aws-sdk', '~> 2'
+
+  # development and test
+  s.add_development_dependency "rspec"
+  # s.add_development_dependency "capybara"
+  # s.add_development_dependency "selenium-webdriver"
 end

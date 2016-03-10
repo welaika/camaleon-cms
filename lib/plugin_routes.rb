@@ -62,57 +62,52 @@ class PluginRoutes
     res
   end
 
-  # return plugin information
-  def self.plugin_info(plugin_key)
-    self.all_plugins.each{|p| return p if p["key"] == plugin_key }
-    nil
-  end
-
-  # return theme information
-  # if theme_name is nil, the use current site theme
-  def self.theme_info(theme_name)
-    self.all_themes.each{|p| return p if p["key"] == theme_name }
-    nil
-  end
-
-  # return system information
-  def self.system_info
-    camaleon_gem = get_gem('camaleon_cms')
-    return {} if !camaleon_gem
-    r = cache_variable("system_info");  return r unless r.nil?
-    res = JSON.parse(File.read(File.join(camaleon_gem.gem_dir, "config", "system.json")))
-    res = res.with_indifferent_access rescue res
-    return cache_variable("system_info", res) unless File.exist?(system_file = File.join(apps_dir, "..", '..', "config", "system.json"))
-    res = res.merge(JSON.parse(File.read(system_file)).with_indifferent_access).with_indifferent_access
-    res["key"] = "system"
-    res["path"] = ''
-    res["kind"] = "system"
-    res["hooks"] = {} unless res["hooks"].present?
-    res["hooks"]["on_notification"] = (res["hooks"]["on_notification"] || []) + ["admin_system_notifications"]
-    cache_variable("system_info", res)
-  end
-
-  # update a system value
-  # key: attribute name
-  # value: new value for attribute
-  def self.system_info_set(key, val)
-    ff = File.read(File.join(apps_dir, "..", '..', "config", "system.json"))
-    File.open(File.join(apps_dir, "..", '..', "config", "system.json"), "w") do |f|
-      f.write(ff.sub(/"#{key}": ?\"(.*)\"/, "\"#{key}\": \"#{val}\""))
+  class << self
+    # return plugin information
+    def plugin_info(plugin_key)
+      self.all_plugins.each{|p| return p if p["key"] == plugin_key }
+      nil
     end
-    self.reload
+
+    # return theme information
+    # if theme_name is nil, the use current site theme
+    def theme_info(theme_name)
+      self.all_themes.each{|p| return p if p["key"] == theme_name }
+      nil
+    end
+
+    # return system static settings (config.json values)
+    def static_system_info
+      r = cache_variable("statis_system_info");  return r unless r.nil?
+      settings = {}
+
+      gem_settings = File.join($camaleon_engine_dir, "config", "system.json")
+      app_settings = Rails.root.join("config", "system.json")
+
+      settings = settings.merge(JSON.parse(File.read(gem_settings))) if File.exist?(gem_settings)
+      settings = settings.merge(JSON.parse(File.read(app_settings))) if File.exist?(app_settings)
+
+      # custom settings
+      settings["key"] = "system"
+      settings["path"] = ''
+      settings["kind"] = "system"
+      settings["hooks"]["on_notification"] = (settings["hooks"]["on_notification"] || []) + ["admin_system_notifications"]
+      cache_variable("statis_system_info", settings)
+    end
+    alias_method :system_info, :static_system_info
   end
 
   # reload routes
   def self.reload
-    @@_vars.each {|v| class_variable_set("@@cache_#{v}", nil) }
-    # WPRails::Application.routes_reloader.reload!
+    @@all_sites = nil
+    @@_vars.each { |v| class_variable_set("@@cache_#{v}", nil) }
     Rails.application.reload_routes!
   end
 
   # return all enabled plugins []
   def self.enabled_plugins(site)
-    r = cache_variable("enable_plugins_site_#{site.id}"); return r unless r.nil?
+    r = cache_variable("enable_plugins_site_#{site.id}")
+    return r unless r.nil?
     res = []
     enabled_ps = site.plugins.active.pluck(:slug)
     all_plugins.each do |plugin|
@@ -126,14 +121,15 @@ class PluginRoutes
   # theme_slug: current theme slug
   def self.enabled_apps(site, theme_slug = nil)
     theme_slug = theme_slug || site.get_theme_slug
-    r = cache_variable("enabled_apps_#{site.id}_#{theme_slug}"); return r unless r.nil?
-    res = [system_info()] + enabled_plugins(site) + [theme_info(theme_slug)]
+    r = cache_variable("enabled_apps_#{site.id}_#{theme_slug}")
+    return r unless r.nil?
+    res = [system_info] + enabled_plugins(site) + [theme_info(theme_slug)]
     cache_variable("enabled_apps_#{site.id}_#{theme_slug}", res)
   end
 
   # return all enabled apps as []: system, themes, plugins
   def self.all_enabled_apps
-    [system_info()] + all_enabled_themes + all_enabled_plugins
+    [system_info] + all_enabled_themes + all_enabled_plugins
   end
 
   # return all enabled themes (a theme is enabled if at least one site is assigned)
@@ -149,7 +145,8 @@ class PluginRoutes
 
   # return all enabled plugins (a theme is enabled if at least one site has installed)
   def self.all_enabled_plugins
-    r = cache_variable("all_enabled_plugins"); return r unless r.nil?
+    r = cache_variable("all_enabled_plugins")
+    return r unless r.nil?
     res, enabled_ps = [], []
     get_sites.each { |site|  enabled_ps += site.plugins.active.pluck(:slug) }
     all_plugins.each do |plugin|
@@ -172,7 +169,8 @@ class PluginRoutes
 
   # all helpers of enabled plugins
   def self.plugin_helpers
-    r = cache_variable("plugins_helper"); return r unless r.nil?
+    r = cache_variable("plugins_helper")
+    return r unless r.nil?
     res = []
     all_enabled_apps.each do |settings|
       res += settings["helpers"] if settings["helpers"].present?
@@ -194,21 +192,21 @@ class PluginRoutes
 
   def self.cache_variable(var_name, value=nil)
     @@_vars.push(var_name).uniq
-    cache = class_variable_get("@@cache_#{var_name}") rescue nil
-    return cache if value.nil?
+    #if Rails.env != "development" # disable cache plugin routes for develoment mode
+      cache = class_variable_get("@@cache_#{var_name}") rescue nil
+      return cache if value.nil?
+    #end
     class_variable_set("@@cache_#{var_name}", value)
     value
   end
 
   # return all sites registered for Plugin routes
   def self.get_sites
-    r = cache_variable("site_get_sites"); return r unless r.nil?
-    res = {}
     begin
-      res = Site.eager_load(:metas).order(term_group: :desc).all
+      @@all_sites ||= CamaleonCms::Site.order(id: :asc).all
     rescue
+      []
     end
-    cache_variable("site_get_sites", res)
   end
 
   # return all locales for all sites joined by |
@@ -219,6 +217,17 @@ class PluginRoutes
       res += s.get_languages
     end
     cache_variable("site_all_locales", res.uniq.join("|"))
+  end
+
+  # return all locales for translated routes
+  def self.all_locales_for_routes
+    r = cache_variable("all_locales_for_routes"); return r unless r.nil?
+    res = {}
+    all_locales.split("|").each do |l|
+      res[l] = "_#{l}"
+    end
+    res[false] = ''
+    cache_variable("all_locales_for_routes", res)
   end
 
   # return apps directory path
@@ -287,7 +296,8 @@ class PluginRoutes
       if File.exist?(config)
         p = JSON.parse(File.read(config))
         p = p.with_indifferent_access rescue p
-        p["key"] = gem.name
+        p["key"] = gem.name if p["key"].nil? # TODO REVIEW ERROR FOR conflict plugin keys
+        #p["key"] = File.basename(path)
         p["path"] = path
         p["kind"] = "plugin"
         p["gem_mode"] = true
@@ -306,7 +316,7 @@ class PluginRoutes
       if File.exist?(config)
         p = JSON.parse(File.read(config))
         p = p.with_indifferent_access rescue p
-        p["key"] = gem.name
+        p["key"] = gem.name if p["key"].nil? # TODO REVIEW ERROR FOR conflict plugin keys
         p["path"] = path
         p["kind"] = "theme"
         p["gem_mode"] = true

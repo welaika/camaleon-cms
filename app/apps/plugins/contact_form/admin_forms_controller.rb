@@ -6,8 +6,9 @@
   This program is distributed in the hope that it will be useful,  but WITHOUT ANY WARRANTY; without even the implied warranty of  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
   See the  GNU Affero General Public License (GPLv3) for more details.
 =end
-class Plugins::ContactForm::AdminFormsController < Apps::PluginsAdminController
+class Plugins::ContactForm::AdminFormsController < CamaleonCms::Apps::PluginsAdminController
   before_action :set_form, only: ['show','edit','update','destroy']
+  add_breadcrumb I18n.t("plugin.contact_form.contact_form"), :admin_plugins_contact_form_admin_forms_path
 
   def index
     # here your actions for admin panel
@@ -16,8 +17,9 @@ class Plugins::ContactForm::AdminFormsController < Apps::PluginsAdminController
   end
 
   def edit
-    admin_breadcrumb_add("#{t('admin.button.edit')}")
-    append_asset_libraries({"plugin_contact_form"=> { js: [plugin_asset_path("contact_form", "js/contact_form.js")], css: [plugin_asset_path("contact_form", "css/contact-form.css")] }})
+    add_breadcrumb I18n.t("camaleon_cms.admin.button.edit")
+    append_asset_libraries({"plugin_contact_form"=> { js: [plugin_asset_path("js/contact_form.js")], css: [plugin_asset_path("css/contact-form.css")] }})
+    render "edit"
   end
 
   def update
@@ -27,11 +29,10 @@ class Plugins::ContactForm::AdminFormsController < Apps::PluginsAdminController
       current_site.contact_forms.where(id: @form.id).update_or_create({settings: fix_meta_value(settings)})
       current_site.contact_forms.where(id: @form.id).update_or_create({value: params[:meta]})
 
-      flash[:notice] = t('admin.message.updated_success')
+      flash[:notice] = t('camaleon_cms.admin.message.updated_success')
       redirect_to action: :edit, id: @form.id
     else
-      append_asset_libraries({"plugin_contact_form"=> { js: [plugin_asset_path("contact_form", "js/contact_form.js")], css: [plugin_asset_path("contact_form", "css/contact-form.css")] }})
-      render 'edit'
+      edit
     end
   end
 
@@ -71,15 +72,6 @@ class Plugins::ContactForm::AdminFormsController < Apps::PluginsAdminController
 
   end
 
-  def fix_meta_value(value)
-    if (value.is_a?(Array) || value.is_a?(Hash))
-      value = value.to_json
-    elsif value.is_a?(String)
-      value = value.to_var
-    end
-    value
-  end
-
   # here add your custom functions
   private
   def set_form
@@ -87,7 +79,7 @@ class Plugins::ContactForm::AdminFormsController < Apps::PluginsAdminController
       @form = current_site.contact_forms.find_by_id(params[:id])
     rescue
       flash[:error] = "Error form class"
-      redirect_to admin_path
+      redirect_to cama_admin_path
     end
   end
 end

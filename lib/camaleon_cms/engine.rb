@@ -1,17 +1,16 @@
 require 'rubygems'
-require 'actionpack/page_caching'
 require 'bcrypt'
 require 'cancancan'
 require 'draper'
-require 'dynamic_sitemaps'
-require 'el_finder'
 require 'meta-tags'
 require 'mini_magick'
 require 'mobu'
 require 'protected_attributes'
-require 'rufus-scheduler'
 require 'will_paginate'
 require 'will_paginate-bootstrap'
+require 'breadcrumbs_on_rails'
+require 'fog'
+require 'font-awesome-rails'
 
 $camaleon_engine_dir = File.expand_path("../../../", __FILE__)
 require File.join($camaleon_engine_dir, "lib", "plugin_routes").to_s
@@ -22,8 +21,8 @@ module CamaleonCms
       if app.respond_to?(:console)
         app.console do
           puts "******** Camaleon CMS: To use custom models and helpers of installed plugins, write this: ********"
-          puts "- include SiteHelper"
-          puts "- site_console_switch(Site.first.decorate)"
+          puts "- include CamaleonCms::SiteHelper"
+          puts "- site_console_switch(CamaleonCms::Site.first.decorate)"
         end
       end
     end
@@ -41,6 +40,9 @@ module CamaleonCms
       app.config.assets.paths << File.join($camaleon_engine_dir, 'app', 'assets', 'fonts')
       app.config.encoding = "utf-8"
 
+      # add prefix url, like: http://localhost.com/blog/
+      # config.action_controller.relative_url_root = PluginRoutes.system_info["relative_url_root"] if PluginRoutes.system_info["relative_url_root"].present?
+
       #multiple route files
       app.routes_reloader.paths.push(File.join(engine_dir, "config", "routes", "admin.rb"))
       app.routes_reloader.paths.push(File.join(engine_dir, "config", "routes", "frontend.rb"))
@@ -48,7 +50,13 @@ module CamaleonCms
 
       # extra configuration for plugins
       app.config.eager_load_paths += %W(#{app.config.root}/app/apps/**/)
-      PluginRoutes.all_plugins.each{ |plugin| app.config.paths["db/migrate"] << File.join(plugin["path"], "migrate") if Dir.exist?(File.join(plugin["path"], "migrate")) }
+      PluginRoutes.all_plugins.each{ |plugin|
+        app.config.paths["db/migrate"] << File.join(plugin["path"], "migrate") if Dir.exist?(File.join(plugin["path"], "migrate"));
+        app.config.paths["db/migrate"] << File.join(plugin["path"], "db", "migrate") if Dir.exist?(File.join(plugin["path"], "db", "migrate"));
+      }
+
+      # Static files
+      app.middleware.use ::ActionDispatch::Static, "#{root}/public"
 
       # migrations checking
       unless app.root.to_s.match root.to_s
