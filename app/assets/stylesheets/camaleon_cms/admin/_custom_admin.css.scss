@@ -21,7 +21,7 @@
       display: none;
     }
     .panel-heading {
-      overflow: hidden;
+      //overflow: hidden;
       position: relative;
       .panel-controls {
         float: right;
@@ -191,6 +191,15 @@
       }
     }
   }
+  .custom_sortable_grouped .header-field-grouped{
+    padding: 5px;
+    margin-bottom: 3px;
+    .fa{
+      @include link_round;
+      display: inline-block;
+      float: none;
+    }
+  }
 }
 
 //************** Main Header && intro js custom
@@ -277,4 +286,8 @@ input.code_style{
     max-height: 100px;
     max-width: 200px;
   }
+}
+label.error, span.error{
+  color: #a94442;
+  font-size: 11px;
 }

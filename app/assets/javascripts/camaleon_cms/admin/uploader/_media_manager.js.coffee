@@ -12,8 +12,8 @@ window["cama_init_media"] = (media_panel) ->
       "<div class='p_thumb'></div>" +
         "<div class='p_label'><b>"+I18n("button.name")+": </b><br> <span>"+data["name"]+"</span></div>" +
         "<div class='p_body'>" +
-        "<div><b>"+I18n("button.url")+":</b><br> <a target='_blank' href='"+data["url"]+"'>"+data["url"]+"</a></div>" +
-        "<div><b>"+I18n("button.size")+":</b><br> <span>"+data["size"]+"</span></div>" +
+        "<div style='overflow: auto;'><b>"+I18n("button.url")+":</b><br> <a target='_blank' href='"+data["url"]+"'>"+data["url"]+"</a></div>" +
+        "<div><b>"+I18n("button.size")+":</b> <span>"+cama_humanFileSize(data["size"])+"</span></div>" +
         "</div>"
 
     if window["callback_media_uploader"]
@@ -24,15 +24,16 @@ window["cama_init_media"] = (media_panel) ->
 
     media_info.html(tpl)
     media_info.find(".p_thumb").html(item.find(".thumb").html())
-    if data["format"] == "image" && media_panel.attr("data-dimension") # verify dimensions
-      img = $('<img src="'+data["url"]+'">').hide()
-      btn = media_info.append(img).find(".p_footer .insert_btn")
-      btn.prop('disabled', true)
-      img.load ->
-        media_info.find(".p_body").append("<div class='cdimension'><b>"+I18n("button.dimension")+": </b><span>"+this.width+"x"+this.height+"</span></div>")
-        ww = parseInt(media_panel.attr("data-dimension").split("x")[0]) || this.width
-        hh = parseInt(media_panel.attr("data-dimension").split("x")[1]) || this.height
-        if media_panel.attr("data-dimension") && this.width == ww && this.height == hh
+    if data["format"] == "image"
+      ww = parseInt(data['dimension'].split("x")[0])
+      hh = parseInt(data['dimension'].split("x")[1])
+      media_info.find(".p_body").append("<div class='cdimension'><b>"+I18n("button.dimension")+": </b><span>"+ww+"x"+hh+"</span></div>")
+      if media_panel.attr("data-dimension") # verify dimensions
+        btn = media_info.find(".p_footer .insert_btn")
+        btn.prop('disabled', true)
+        _ww = parseInt(media_panel.attr("data-dimension").split("x")[0])
+        _hh = parseInt(media_panel.attr("data-dimension").split("x")[1])
+        if _ww == ww && _hh == hh
           btn.prop('disabled', false)
         else
           media_info.find(".cdimension").css("color", 'red')
@@ -40,7 +41,6 @@ window["cama_init_media"] = (media_panel) ->
             $.fn.upload_url({url: data["url"]})
           )
           btn.after(cut)
-        media_info.find(".p_thumb").html(img.show())
 
     if window["callback_media_uploader"] # trigger callback
       media_info.find(".insert_btn").click ->
@@ -59,16 +59,17 @@ window["cama_init_media"] = (media_panel) ->
   ########## file uploader
   p_upload = media_panel.find(".cama_media_fileuploader")
   customFileData = ->
-    return {folder: media_panel.attr("data-folder"), formats: media_panel.attr("data-formats") }
+    return cama_media_get_custom_params()
 
   p_upload.uploadFile({
     url: p_upload.attr("data-url"),
     fileName: "file_upload",
-    dragDropStr: '<span><b>'+p_upload.attr('data-dragDropStr')+'</b></span>',
+    uploadButtonClass: "btn btn-primary btn-block",
+    dragDropStr: '<span style="display: block;"><b>'+p_upload.attr('data-dragDropStr')+'</b></span>',
     uploadStr: p_upload.attr('data-uploadStr'),
     dynamicFormData: customFileData,
     onSuccess: ((files,res_upload,xhr,pd)->
-      if res_upload.search("<") == 0 # success upload
+      if res_upload.search("media_item") >= 0 # success upload
         media_panel.trigger("add_file", {item: res_upload, selected: $(pd.statusbar).siblings().not('.error_file_upload').size() == 0})
         $(pd.statusbar).remove();
       else
@@ -83,9 +84,13 @@ window["cama_init_media"] = (media_panel) ->
   ######### folders breadcrumb
   media_panel.find(".media_folder_breadcrumb").on("click", "a", ->
     media_panel.trigger("navigate_to", {folder: $(this).attr("data-path")})
+    return false
   )
   media_panel.on("click", ".folder_item", ->
-    media_panel.trigger("navigate_to", {folder: media_panel.attr("data-folder")+"/"+$(this).attr("data-key")})
+    f = media_panel.attr("data-folder")+"/"+$(this).attr("data-key")
+    if $(this).attr("data-key").search('/') >= 0
+      f = $(this).attr("data-key")
+    media_panel.trigger("navigate_to", {folder: f.replace(/\/{2,}/g, '/')})
   )
   media_panel.bind("update_breadcrumb", ->
     folder = media_panel.attr("data-folder").replace("//", "/")
@@ -103,7 +108,7 @@ window["cama_init_media"] = (media_panel) ->
         breadrumb.push("<li><span>"+name+"</span></li>")
       else
         folder_prefix.push(value)
-        breadrumb.push("<li><a data-path='"+(folder_prefix.join("/") || "/")+"' href='#'>"+name+"</a></li>")
+        breadrumb.push("<li><a data-path='"+(folder_prefix.join("/") || "/").replace(/\/{2,}/g, '/')+"' href='#'>"+name+"</a></li>")
     media_panel.find(".media_folder_breadcrumb").html(breadrumb.join(""))
   ).trigger("update_breadcrumb")
   ## end folders
@@ -118,7 +123,7 @@ window["cama_init_media"] = (media_panel) ->
     media_link_tab_upload.click()
 
     showLoading()
-    $.get(media_panel.attr("data-url"), {folder: folder, partial: true, media_formats: media_panel.attr("data-formats")}, (res)->
+    $.get(media_panel.attr("data-url"), cama_media_get_custom_params({partial: true, folder: folder}), (res)->
       media_panel.find(".media_browser_list").html(res)
       hideLoading()
     )
@@ -129,10 +134,27 @@ window["cama_init_media"] = (media_panel) ->
       item.click()
   )
 
+  # search file
+  media_panel.find('#cama_search_form').submit ->
+    showLoading()
+    $.get(media_panel.attr("data-url"), cama_media_get_custom_params({search: $(this).find('input:text').val(), partial: true}), (res)->
+      media_panel.find(".media_browser_list").html(res)
+      hideLoading()
+    )
+    return false
+
+  # reload current directory
+  media_panel.find('.cam_media_reload').click (e)->
+    showLoading()
+    $.get(media_panel.attr("data-url"), cama_media_get_custom_params({partial: true, cama_media_reload: $(this).attr('data-action')}), (res)->
+      media_panel.find(".media_browser_list").html(res)
+      hideLoading()
+    )
+    e.preventDefault()
 
   # element actions
   media_panel.on("click", "a.add_folder", ->
-    content = $("<form><div><label for=''>"+I18n('button.folder')+": </label> <div class='input-group'><input name='folder' class='form-control required' placeholder='Folder name..'><span class='input-group-btn'><button class='btn btn-primary' type='submit'>"+I18n('button.create')+"</button></span></div></div> </form>")
+    content = $("<form id='add_folder_form'><div><label for=''>"+I18n('button.folder')+": </label> <div class='input-group'><input name='folder' class='form-control required' placeholder='Folder name..'><span class='input-group-btn'><button class='btn btn-primary' type='submit'>"+I18n('button.create')+"</button></span></div></div> </form>")
     callback = (modal)->
       btn = modal.find(".btn-primary")
       input = modal.find("input").keyup(->
@@ -143,16 +165,16 @@ window["cama_init_media"] = (media_panel) ->
       ).trigger("keyup")
       modal.find("form").submit ->
         showLoading()
-        $.post(media_panel.attr("data-url_actions"), {folder: media_panel.attr("data-folder")+"/"+input.val(), media_action: "new_folder"}, (res)->
+        $.post(media_panel.attr("data-url_actions"), cama_media_get_custom_params({folder: media_panel.attr("data-folder")+"/"+input.val(), media_action: "new_folder"}), (res)->
           hideLoading()
           modal.modal("hide")
-          if res.search("<") == 0 # success upload
+          if res.search("folder_item") >= 0 # success upload
             media_panel.find(".media_browser_list").append(res)
           else
             $.fn.alert({type: 'error', content: res, title: "Error"})
         )
         return false
-    open_modal({title: "New Folder", content: content, callback: callback})
+    open_modal({title: "New Folder", content: content, callback: callback, zindex: 9999999})
     return false
   )
 
@@ -163,7 +185,7 @@ window["cama_init_media"] = (media_panel) ->
     link = $(this)
     item = link.closest(".media_item")
     showLoading()
-    $.post(media_panel.attr("data-url_actions"), {folder: media_panel.attr("data-folder")+"/"+item.attr("data-key"), media_action: if link.hasClass("del_folder") then "del_folder" else "del_file"}, (res)->
+    $.post(media_panel.attr("data-url_actions"), cama_media_get_custom_params({folder: media_panel.attr("data-folder")+"/"+item.attr("data-key"), media_action: if link.hasClass("del_folder") then "del_folder" else "del_file"}), (res)->
       hideLoading()
       if res
         $.fn.alert({type: 'error', content: res, title: I18n("button.error")})
@@ -186,20 +208,31 @@ window["cama_init_media"] = (media_panel) ->
     return false
   ).validate()
 
+# return extra attributes for media panel
+window['cama_media_get_custom_params'] = (custom_settings)->
+  media_panel = $("#cama_media_gallery")
+  r = eval("("+media_panel.attr('data-extra-params')+")")
+  r['folder'] = media_panel.attr("data-folder")
+  if custom_settings
+    $.extend(r, custom_settings)
+  r['folder'] = r['folder'].replace(/\/{2,}/g, '/')
+  return r
+
 $ ->
-  # sample: $.fn.upload_url({url: 'http://camaleon.tuzitio.com/media/132/logo2.png', dimension: '120x120', folder: 'my_folder'})
+  # sample: $.fn.upload_url({url: 'http://camaleon.tuzitio.com/media/132/logo2.png', dimension: '120x120', versions: '200x200', folder: 'my_folder', thumb_size: '100x100'})
   # dimension: default current dimension
   # folder: default current folder
+  # private: (Boolean) if true => list private files
   $.fn.upload_url = (args)->
     media_panel = $("#cama_media_gallery")
-    data = {folder: media_panel.attr("data-folder"), media_action: "crop_url", formats: media_panel.attr("data-formats"), onerror: (message) ->
+    data = cama_media_get_custom_params({media_action: "crop_url", onerror: (message) ->
       $.fn.alert({type: 'error', content: message, title: I18n("msg.error_uploading")})
-    }
+    })
     $.extend(data, args); on_error = data["onerror"]; delete data["onerror"];
     showLoading()
     $.post(media_panel.attr("data-url_actions"), data, (res_upload)->
       hideLoading()
-      if res_upload.search("<") == 0 # success upload
+      if res_upload.search("media_item") >= 0 # success upload
         media_panel.trigger("add_file", {item: res_upload})
         if data["callback"]
           data["callback"](res_upload)
@@ -212,13 +245,22 @@ $ ->
 
 # jquery library for modal updaloder
 $ ->
-  # sample: $.fn.upload_filemanager({title: "My title", formats: "image,video", dimension: "30x30", selected: function(file){ alert(file["name"]) }})
+  # sample: $.fn.upload_filemanager({title: "My title", formats: "image,video", dimension: "30x30", versions: '100x100,200x200', thumb_size: '100x100', selected: function(file){ alert(file["name"]) }})
   # file structure: {"name":"422.html","size":1547, "url":"http://localhost:3000/media/1/422.html", "format":"doc","type":"text/html"}
   # dimension: dimension: "30x30" | "x30" | dimension: "30x"
+  # private: (boolean) if true => browser private files that are not possible access by public url
   $.fn.upload_filemanager = (args)->
     args = args || {}
-    open_modal({title: args["title"] || I18n("msg.media_title"), modal_size: "modal-lg", mode: "ajax", url: root_url+"/admin/media/ajax", ajax_params: {media_formats: args["formats"], dimension: args["dimension"] }, callback: (modal)->
+    open_modal({title: args["title"] || I18n("msg.media_title"), id: 'cama_modal_file_uploader', modal_size: "modal-lg", mode: "ajax", url: root_admin_url+"/media/ajax", ajax_params: {media_formats: args["formats"], dimension: args["dimension"], versions: args["versions"], thumb_size: args["thumb_size"], private: args['private'] }, callback: (modal)->
       if args["selected"]
         window["callback_media_uploader"] = args["selected"]
       modal.css("z-index", args["zindex"] || 99999).children(".modal-dialog").css("width", "90%")
     })
+
+window['cama_humanFileSize'] = (size)->
+  units = ['B', 'KB', 'MB', 'GB', 'TB', 'PB', 'EB', 'ZB', 'YB'];
+  i = 0;
+  while(size >= 1024)
+    size /= 1024;
+    ++i;
+  return size.toFixed(1) + ' ' + units[i];

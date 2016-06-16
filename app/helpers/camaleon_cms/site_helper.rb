@@ -13,7 +13,7 @@ module CamaleonCms::SiteHelper
     return $current_site if defined?($current_site)
     return @current_site if defined?(@current_site)
     if PluginRoutes.get_sites.size == 1
-      site = CamaleonCms::Site.first.decorate
+      site = CamaleonCms::Site.first.decorate rescue nil
     else
       host = [request.original_url.to_s.parse_domain]
       host << request.subdomain if request.subdomain.present?
@@ -25,41 +25,32 @@ module CamaleonCms::SiteHelper
     @current_site = r[:site]
   end
 
-  # check if current site exist, if not, this will be redirected to main domain
-  def cama_site_check_existence()
-    if !current_site.present?
-      if Cama::Site.main_site.present?
-        redirect_to Cama::Site.main_site.decorate.the_url
-      else
-        redirect_to cama_admin_installers_path
-      end
-    end
-  end
-
   # return current theme model for current site
   def current_theme
     @_current_theme ||= current_site.get_theme.decorate
   end
 
   # get list templates files of current theme
-  def cama_get_list_template_files
+  def cama_get_list_template_files(post_type)
     contained_files = []
     Dir[File.join(current_theme.settings["path"], "views", '*')].each do |path|
       f_name = File.basename(path)
       contained_files << f_name.split(".").first if f_name.include?('template_')
     end
-    contained_files
+    _args={tempates: contained_files, post_type: post_type}; hooks_run("post_get_list_templates", _args)
+    _args[:tempates]
   end
 
   # get list layouts files of current theme
   # return an array of layouts for current theme
-  def cama_get_list_layouts_files
+  def cama_get_list_layouts_files(post_type)
     contained_files = []
     Dir[File.join(current_theme.settings["path"], "views", "layouts", '*')].each do |path|
       f_name = File.basename(path)
       contained_files << f_name.split(".").first unless f_name.start_with?('_')
     end
-    contained_files
+    _args={layouts: contained_files, post_type: post_type}; hooks_run("post_get_list_layouts", _args)
+    _args[:layouts]
   end
 
 
@@ -103,24 +94,5 @@ module CamaleonCms::SiteHelper
     theme_model = current_site.get_theme(key)
     hook_run(theme, "on_inactive", theme_model) if theme_model.present?
     # theme_model.destroy
-  end
-
-
-  # load all custom models customized by plugins or templates in custom_models.rb
-  def site_load_custom_models(site)
-    PluginRoutes.enabled_apps(site).each{ |app|
-      next if !app.present? || !app["path"].present?
-      s = File.join(app["path"], "config", "custom_models.rb")
-      eval(File.read(s)) if File.exist?(s)
-    }
-  end
-
-  #################### ONLY FOR CONSOLE ####################
-  # switch console sessions and redefine current for the console session
-  # site: Site model used as current site
-  # return nil
-  def site_console_switch(site = nil)
-    $current_site = site
-    site_load_custom_models($current_site)
   end
 end

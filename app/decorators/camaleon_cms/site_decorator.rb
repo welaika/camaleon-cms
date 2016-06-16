@@ -26,9 +26,9 @@ class CamaleonCms::SiteDecorator < CamaleonCms::TermTaxonomyDecorator
   # return all contents from this site registered for post_type = slug (filter visibility, hidden, expired, ...)
   # slug_or_id: slug or id of the post_type or array of slugs of post_types, default 'post'
   def the_contents(slug_or_id = "post")
-    return h.verify_front_visibility(object.posts.where("#{CamaleonCms::TermTaxonomy.table_name}.id = ?", slug_or_id)).eager_load(:post_type) if slug_or_id.is_a?(Integer)
-    return h.verify_front_visibility(object.posts.where("#{CamaleonCms::TermTaxonomy.table_name}.slug = ?", slug_or_id)).eager_load(:post_type) if slug_or_id.is_a?(String)
-    return h.verify_front_visibility(object.posts.where("#{CamaleonCms::TermTaxonomy.table_name}.slug in (?)", slug_or_id)).eager_load(:post_type) if slug_or_id.is_a?(Array)
+    return h.verify_front_visibility(object.posts.where("#{CamaleonCms::TermTaxonomy.table_name}.id = ?", slug_or_id)) if slug_or_id.is_a?(Integer)
+    return h.verify_front_visibility(object.posts.where("#{CamaleonCms::TermTaxonomy.table_name}.slug = ?", slug_or_id)) if slug_or_id.is_a?(String)
+    return h.verify_front_visibility(object.posts.where("#{CamaleonCms::TermTaxonomy.table_name}.slug in (?)", slug_or_id)) if slug_or_id.is_a?(Array)
   end
 
   # return all contents for this site filteredby (visibility, hidden, expired, ...)
@@ -41,7 +41,7 @@ class CamaleonCms::SiteDecorator < CamaleonCms::TermTaxonomyDecorator
     if slug_or_id.present?
       the_contents(slug_or_id)
     else
-      h.verify_front_visibility(object.posts).eager_load(:post_type)
+      h.verify_front_visibility(object.posts)
     end
   end
 
@@ -101,7 +101,7 @@ class CamaleonCms::SiteDecorator < CamaleonCms::TermTaxonomyDecorator
 
   # return all post types for this site
   def the_post_types
-    object.post_types.eager_load(:metas)
+    object.post_types
   end
 
   # return a post_type object with id or slug = slug_or_id
@@ -127,7 +127,7 @@ class CamaleonCms::SiteDecorator < CamaleonCms::TermTaxonomyDecorator
     lan.each do |lang|
       path = lang.to_s+'.png'
       img = "<img src='#{h.asset_path("camaleon_cms/language/#{path}")}'/>"
-      res << "<li class='#{ current_class if I18n.locale.to_s == lang.to_s}'> <a href='#{h.cama_url_to_fixed(current_page ? "url_for" : "cama_root_url", {locale: lang})}'>#{img}</a> </li>"
+      res << "<li class='#{ current_class if I18n.locale.to_s == lang.to_s}'> <a href='#{h.cama_url_to_fixed(current_page ? "url_for" : "cama_root_url", {locale: lang, cama_set_language: lang})}'>#{img}</a> </li>"
     end
     res << "</ul>"
     res.join("")
@@ -193,5 +193,17 @@ class CamaleonCms::SiteDecorator < CamaleonCms::TermTaxonomyDecorator
   # check if current user can manage sites
   def manage_sites?
     self.main_site? && h.current_user.admin?
+  end
+
+  # return the text status of current site
+  def the_status
+    I18n.t("camaleon_cms.models.site.status_options.#{object.status || 'active'}", default: (object.status || 'active').titleize)
+  end
+
+  # return an array for select options of all status for this site
+  def the_status_options
+    ['active', 'inactive', 'maintenance'].map do |o|
+      [I18n.t("camaleon_cms.models.site.status_options.#{o}", default: o.titleize), o == 'active' ? '': o]
+    end
   end
 end

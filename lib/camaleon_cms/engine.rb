@@ -9,8 +9,10 @@ require 'protected_attributes'
 require 'will_paginate'
 require 'will_paginate-bootstrap'
 require 'breadcrumbs_on_rails'
-require 'fog'
+require 'aws-sdk'
 require 'font-awesome-rails'
+require 'tinymce-rails'
+require 'cama_contact_form'
 
 $camaleon_engine_dir = File.expand_path("../../../", __FILE__)
 require File.join($camaleon_engine_dir, "lib", "plugin_routes").to_s
@@ -20,9 +22,9 @@ module CamaleonCms
     config.before_initialize do |app|
       if app.respond_to?(:console)
         app.console do
-          puts "******** Camaleon CMS: To use custom models and helpers of installed plugins, write this: ********"
-          puts "- include CamaleonCms::SiteHelper"
-          puts "- site_console_switch(CamaleonCms::Site.first.decorate)"
+          # puts "******** Camaleon CMS: ********"
+          # puts "- include CamaleonCms::SiteHelper"
+          # puts "- $current_site = CamaleonCms::Site.first.decorate"
         end
       end
     end

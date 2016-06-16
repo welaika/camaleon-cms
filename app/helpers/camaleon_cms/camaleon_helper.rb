@@ -14,7 +14,7 @@ module CamaleonCms::CamaleonHelper
     return '' unless cama_current_user.present?
     return '' unless cama_current_user.admin?
     attrs = {target: "_blank", style: "font-size:11px !important;cursor:pointer;"}.merge(attrs)
-    ActionController::Base.helpers.link_to("&rarr; #{title || ct("edit")}".html_safe, url, attrs)
+    ActionController::Base.helpers.link_to("&rarr; #{title || ct("edit", default: 'Edit')}".html_safe, url, attrs)
   end
 
   # execute controller action and return response
@@ -46,7 +46,7 @@ module CamaleonCms::CamaleonHelper
 
   # check if current request was for admin panel
   def cama_is_admin_request?
-    !(@_admin_menus.nil?)
+    @cama_i18n_frontend.present?
   end
 
   # generate loop categories html sitemap links

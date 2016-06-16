@@ -40,6 +40,7 @@ class CamaleonCms::PostDecorator < CamaleonCms::ApplicationDecorator
     th = object.get_meta("thumb")
     th.present? ? th : (default || object.post_type.get_option('default_thumb', nil) || h.asset_url("camaleon_cms/image-not-found.png"))
   end
+  alias_method :the_image_url, :the_thumb_url
 
   # check if this page has registered the thumbnail
   def has_thumb?
@@ -140,7 +141,7 @@ class CamaleonCms::PostDecorator < CamaleonCms::ApplicationDecorator
   def the_edit_link(title = nil, attrs = { })
     return '' unless h.cama_current_user.present?
     attrs = {target: "_blank", style: "font-size:11px !important;cursor:pointer;"}.merge(attrs)
-    h.link_to("&rarr; #{title || h.ct("edit")}".html_safe, the_edit_url, attrs)
+    h.link_to("&rarr; #{title || h.ct("edit", default: 'Edit')}".html_safe, the_edit_url, attrs)
   end
 
   # show thumbnail image as html
@@ -161,16 +162,16 @@ class CamaleonCms::PostDecorator < CamaleonCms::ApplicationDecorator
     case self.status
       when "published"
         color = "info"
-        status = I18n.t('camaleon_cms.admin.post_type.published')
+        status = I18n.t('camaleon_cms.admin.post_type.published', default: 'Published')
       when "draft"
         color = "warning"
-        status = I18n.t('camaleon_cms.admin.table.draft')
+        status = I18n.t('camaleon_cms.admin.table.draft', default: 'Draft')
       when "trash"
         color = "danger"
-        status = I18n.t('camaleon_cms.admin.table.trash')
+        status = I18n.t('camaleon_cms.admin.table.trash', default: 'Trash')
       when "pending"
         color = "default"
-        status = I18n.t('camaleon_cms.admin.table.pending')
+        status = I18n.t('camaleon_cms.admin.table.pending', default: 'Pending')
       else
         color = "default"
         status = self.status
@@ -236,4 +237,14 @@ class CamaleonCms::PostDecorator < CamaleonCms::ApplicationDecorator
     res.html_safe
   end
 
+  # return all related posts of current post
+  def the_related_posts
+    ptype = self.the_post_type
+    ptype.the_posts.joins(:categories).where("#{CamaleonCms::TermRelationship.table_name}" => {term_taxonomy_id: the_categories.pluck(:id)})
+  end
+
+  # fix for "Using Draper::Decorator without inferred source class"
+  def self.object_class_name
+    'CamaleonCms::Post'
+  end
 end

@@ -15,16 +15,12 @@
  *= require ./lte/skins/skin-blue
  *= require ./_custom_admin
 
- *= require ./bootstrap-datepicker
+ *= require ./_bootstrap-datepicker
  *= require ./introjs/_introjs.min
  *= require ./tageditor/_jquery.tag-editor
 
  *= require ./uploader/_uploadfile
-
-
-
- // tinymce
- *= require camaleon_cms/admin/tinymce/skins/lightgray/content.min
+ *= require ./_bootstrap-select
 
  // post
  *= require ./_jquery.tagsinput

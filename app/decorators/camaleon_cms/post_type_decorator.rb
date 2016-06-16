@@ -10,7 +10,20 @@ class CamaleonCms::PostTypeDecorator < CamaleonCms::TermTaxonomyDecorator
   delegate_all
 
   # return the public url for this post type
+  # Sample: http://localhost/my-group.html
   def the_url(*args)
+    args = args.extract_options!
+    args[:post_type_id] = the_id
+    args[:post_type_slug] = I18n.t("routes.post_types.#{the_slug}", default: the_slug)
+    args[:locale] = get_locale unless args.include?(:locale)
+    args[:format] = "html"
+    as_path = args.delete(:as_path)
+    h.cama_url_to_fixed("cama_post_type_#{self.id}_#{as_path.present? ? "path" : "url"}", args)
+  end
+
+  # return the public url with group structure
+  # Sample: http://localhost/group/10-my-group.html
+  def the_group_url(*args)
     args = args.extract_options!
     args[:post_type_id] = the_id
     args[:title] = the_title.parameterize
